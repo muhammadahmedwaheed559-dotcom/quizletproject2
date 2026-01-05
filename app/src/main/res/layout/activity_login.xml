@@ -51,14 +51,14 @@
             android:layout_marginTop="16dp"
             android:textColor="?attr/colorPrimary"/>
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/tvForgotPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forgot Password?"
+            android:layout_marginTop="16dp"
+            android:textColor="?attr/colorPrimary"/>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
+    </LinearLayout>
 
 </RelativeLayout>

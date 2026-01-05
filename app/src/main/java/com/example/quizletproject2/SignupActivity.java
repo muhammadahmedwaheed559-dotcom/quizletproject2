@@ -7,7 +7,6 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,7 +20,6 @@ public class SignupActivity extends AppCompatActivity {
     private EditText emailField, passwordField, confirmPasswordField;
     private Button signupButton;
     private TextView goToLogin;
-    private ProgressBar progressBar;
 
     private FirebaseAuth mAuth;
 
@@ -37,7 +35,6 @@ public class SignupActivity extends AppCompatActivity {
         confirmPasswordField = findViewById(R.id.etConfirmPassword);
         signupButton = findViewById(R.id.btnSignup);
         goToLogin = findViewById(R.id.tvGoToLogin);
-        progressBar = findViewById(R.id.progressBar);
 
         signupButton.setOnClickListener(v -> createUser());
 
@@ -82,16 +79,17 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        progressBar.setVisibility(View.VISIBLE);
-
         // Firebase Create User Method
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
-                    progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
-                        Toast.makeText(SignupActivity.this, "Account Created!", Toast.LENGTH_SHORT).show();
-                        // Go to Main Activity (Dashboard)
-                        Intent intent = new Intent(SignupActivity.this, MainActivity.class);
+                        Toast.makeText(SignupActivity.this, "Account created successfully! Please login.", Toast.LENGTH_SHORT).show();
+                        
+                        // Sign out the user so they have to login explicitly
+                        mAuth.signOut();
+
+                        // Go to Login Activity
+                        Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                         finish();

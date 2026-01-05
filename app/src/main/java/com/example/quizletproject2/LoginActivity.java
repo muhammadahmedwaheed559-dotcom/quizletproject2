@@ -7,7 +7,6 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,8 +20,7 @@ public class LoginActivity extends AppCompatActivity {
     // Define UI elements
     private EditText emailField, passwordField;
     private Button loginButton;
-    private TextView goToSignup;
-    private ProgressBar progressBar;
+    private TextView goToSignup, forgotPassword;
 
     // Define Firebase Auth instance
     private FirebaseAuth mAuth;
@@ -30,7 +28,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -40,20 +37,26 @@ public class LoginActivity extends AppCompatActivity {
             // User is already logged in, go to Main/Dashboard
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
+            return; // Return to prevent the rest of the method from running
         }
+
+        setContentView(R.layout.activity_login);
 
         // Link Java objects to XML IDs
         emailField = findViewById(R.id.etLoginEmail);
         passwordField = findViewById(R.id.etLoginPassword);
         loginButton = findViewById(R.id.btnLogin);
         goToSignup = findViewById(R.id.tvGoToSignup);
-        progressBar = findViewById(R.id.progressBar);
+        forgotPassword = findViewById(R.id.tvForgotPassword);
 
         // Click Listener for Login Button
         loginButton.setOnClickListener(v -> loginUser());
 
         // Click Listener to switch to Signup screen
         goToSignup.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignupActivity.class)));
+
+        // Click Listener to go to Forgot Password screen
+        forgotPassword.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class)));
     }
 
     private void loginUser() {
@@ -79,12 +82,9 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        progressBar.setVisibility(View.VISIBLE);
-
         // Firebase Sign In Method
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
-                    progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
                         // Sign in success
                         Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
