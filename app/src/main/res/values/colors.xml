@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="seed">#1E88E5</color>
+    <color name="md_theme_light_primary">#00639C</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#CDE5FF</color>
+    <color name="md_theme_light_onPrimaryContainer">#001D33</color>
+    <color name="md_theme_light_secondary">#51606F</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#D4E4F6</color>
+    <color name="md_theme_light_onSecondaryContainer">#0D1D2A</color>
+    <color name="md_theme_light_tertiary">#67587A</color>
+    <color name="md_theme_light_onTertiary">#FFFFFF</color>
+    <color name="md_theme_light_tertiaryContainer">#ECDCFF</color>
+    <color name="md_theme_light_onTertiaryContainer">#221534</color>
+    <color name="md_theme_light_error">#BA1A1A</color>
+    <color name="md_theme_light_errorContainer">#FFDAD6</color>
+    <color name="md_theme_light_onError">#FFFFFF</color>
+    <color name="md_theme_light_onErrorContainer">#410002</color>
+    <color name="md_theme_light_background">#F8F9FF</color>
+    <color name="md_theme_light_onBackground">#191C20</color>
+    <color name="md_theme_light_surface">#F8F9FF</color>
+    <color name="md_theme_light_onSurface">#191C20</color>
+    <color name="md_theme_light_surfaceVariant">#DEE3EB</color>
+    <color name="md_theme_light_onSurfaceVariant">#42474E</color>
+    <color name="md_theme_light_outline">#72777F</color>
+    <color name="md_theme_light_inverseOnSurface">#F0F1F7</color>
+    <color name="md_theme_light_inverseSurface">#2E3135</color>
+    <color name="md_theme_light_inversePrimary">#94CCFF</color>
+    <color name="md_theme_light_shadow">#000000</color>
+    <color name="md_theme_light_surfaceTint">#00639C</color>
+    <color name="md_theme_light_outlineVariant">#C2C7CF</color>
+    <color name="md_theme_light_scrim">#000000</color>
 </resources>
