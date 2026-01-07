@@ -1,6 +1,7 @@
 package com.example.quizletproject2; // CHECK YOUR PACKAGE NAME
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 
@@ -9,13 +10,17 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
+    private LinearLayout scanCard; // Variable for the Scan Card
     private ImageView profileIcon;
 
     @Override
@@ -24,9 +29,47 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
+
+        // 1. Find the Scan Card ID
+        scanCard = findViewById(R.id.cardScanner);
         profileIcon = findViewById(R.id.ivProfile);
 
+        // 2. Set Click Listener for Scanner
+        scanCard.setOnClickListener(v -> startQRScanner());
+
+        // 3. Set Click Listener for Profile Icon
         profileIcon.setOnClickListener(this::showPopupMenu);
+    }
+
+    // Method to initiate the scan
+    private void startQRScanner() {
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.setPrompt("Scan a QR Code");
+        integrator.setOrientationLocked(true); // Lock to portrait
+        integrator.setBeepEnabled(true);
+        integrator.initiateScan(); // This opens the camera
+    }
+
+    // Handle the result when Camera closes
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+
+        if (result != null) {
+            if (result.getContents() == null) {
+                // User cancelled the scan (pressed back button)
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+            } else {
+                // QR Code detected!
+                String scannedData = result.getContents();
+                Toast.makeText(this, "Scanned: " + scannedData, Toast.LENGTH_LONG).show();
+
+                // Optional: In the future, we can add logic here to do something
+                // specific if the QR code is a "Quiz Set ID".
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void showPopupMenu(View view) {
@@ -43,12 +86,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logoutUser() {
-        mAuth.signOut(); // Firebase Sign out
+        mAuth.signOut();
         Toast.makeText(this, "Logged Out", Toast.LENGTH_SHORT).show();
-
-        // Return to Login Activity
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-        // Clear the back stack so user can't press "Back" to re-enter
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
