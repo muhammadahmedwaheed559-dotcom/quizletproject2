@@ -55,4 +55,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation ("com.google.firebase:firebase-firestore")
 
+    implementation("com.google.android.gms:play-services-ads:23.0.0")
+
 }
