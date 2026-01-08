@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.cardview.widget.CardView; // Import CardView
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private LinearLayout scanCard; // Variable for the Scan Card
+    private CardView aiCard;           // Variable for the AI Chat Card (Added)
     private ImageView profileIcon;
 
     @Override
@@ -30,14 +32,23 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        // 1. Find the Scan Card ID
+        // 1. Find the Views by ID
         scanCard = findViewById(R.id.cardScanner);
         profileIcon = findViewById(R.id.ivProfile);
+        aiCard = findViewById(R.id.cardAiChat); // Finding the AI Card
 
         // 2. Set Click Listener for Scanner
         scanCard.setOnClickListener(v -> startQRScanner());
 
-        // 3. Set Click Listener for Profile Icon
+        // 3. Set Click Listener for AI Chat (Added)
+        // This makes the card clickable and opens the AI Chat screen
+        if (aiCard != null) {
+            aiCard.setOnClickListener(v -> {
+                startActivity(new Intent(MainActivity.this, AiChatActivity.class));
+            });
+        }
+
+        // 4. Set Click Listener for Profile Icon
         profileIcon.setOnClickListener(this::showPopupMenu);
     }
 
@@ -69,8 +80,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
+        }    }
 
     private void showPopupMenu(View view) {
         PopupMenu popupMenu = new PopupMenu(this, view);

@@ -36,6 +36,7 @@
 
                 <!-- Feature 1: AI Chat (Card) -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardAiChat" 
                     android:layout_width="0dp"
                     android:layout_height="150dp"
                     android:layout_columnWeight="1"
@@ -47,7 +48,6 @@
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:orientation="vertical">
-                        <!-- Placeholder Icon (Text for now) -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
