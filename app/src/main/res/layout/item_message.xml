@@ -10,7 +10,16 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:background="@drawable/chat_bubble"
+        android:orientation="vertical"
         android:padding="8dp">
+
+        <TextView
+            android:id="@+id/sender_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/left_chat_text_view"

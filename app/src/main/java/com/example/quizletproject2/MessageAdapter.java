@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
@@ -29,13 +31,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messageList.get(position);
-        if (message.getSentBy().equals(Message.SENT_BY_ME)) {
+        String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getEmail() : "";
+
+        if (message.getSentBy().equals(Message.SENT_BY_ME) || message.getSentBy().equals(currentUserEmail)) {
             holder.leftChatView.setVisibility(View.GONE);
             holder.rightChatView.setVisibility(View.VISIBLE);
             holder.rightTextView.setText(message.getMessage());
         } else {
             holder.rightChatView.setVisibility(View.GONE);
             holder.leftChatView.setVisibility(View.VISIBLE);
+            holder.senderTextView.setText(message.getSentBy());
             holder.leftTextView.setText(message.getMessage());
         }
     }
@@ -47,7 +52,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         LinearLayout leftChatView, rightChatView;
-        TextView leftTextView, rightTextView;
+        TextView leftTextView, rightTextView, senderTextView;
 
         public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -55,6 +60,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             rightChatView = itemView.findViewById(R.id.right_chat_view);
             leftTextView = itemView.findViewById(R.id.left_chat_text_view);
             rightTextView = itemView.findViewById(R.id.right_chat_text_view);
+            senderTextView = itemView.findViewById(R.id.sender_text_view);
         }
     }
 }

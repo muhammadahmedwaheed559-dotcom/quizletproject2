@@ -1,4 +1,4 @@
-package com.example.quizletproject2; // CHECK PACKAGE
+package com.example.quizletproject2;
 
 import android.os.Bundle;
 import android.view.View;
@@ -35,7 +35,6 @@ public class AiChatActivity extends AppCompatActivity {
     MessageAdapter messageAdapter;
 
     // YOUR API KEY
-
     public static final String API_KEY = "YOUR_API_KEY";
 
     // Google Gemini API URL
@@ -85,12 +84,6 @@ public class AiChatActivity extends AppCompatActivity {
     }
 
     void callGeminiAPI(String question) {
-        // "Typing" indication
-        // addToChat("Thinking...", Message.SENT_BY_BOT);
-
-        // JSON Structure for Gemini API
-        // { "contents": [{ "parts": [{ "text": "YOUR QUESTION" }] }] }
-
         JSONObject jsonBody = new JSONObject();
         try {
             JSONObject part = new JSONObject();
@@ -130,7 +123,6 @@ public class AiChatActivity extends AppCompatActivity {
                         String responseBody = response.body().string();
                         JSONObject jsonResponse = new JSONObject(responseBody);
 
-                        // Parse logic: candidates[0] -> content -> parts[0] -> text
                         JSONArray candidates = jsonResponse.getJSONArray("candidates");
                         JSONObject firstCandidate = candidates.getJSONObject(0);
                         JSONObject content = firstCandidate.getJSONObject("content");

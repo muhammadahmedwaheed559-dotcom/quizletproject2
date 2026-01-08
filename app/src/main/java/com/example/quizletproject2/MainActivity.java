@@ -15,14 +15,20 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private LinearLayout scanCard; // Variable for the Scan Card
-    private CardView aiCard;           // Variable for the AI Chat Card (Added)
+    private CardView aiCard;           // Variable for the AI Chat Card (Changed to CardView)
+    private CardView chatCard;         // Variable for the Real-time Chat Card (Study Group)
     private ImageView profileIcon;
 
     @Override
@@ -35,20 +41,27 @@ public class MainActivity extends AppCompatActivity {
         // 1. Find the Views by ID
         scanCard = findViewById(R.id.cardScanner);
         profileIcon = findViewById(R.id.ivProfile);
-        aiCard = findViewById(R.id.cardAiChat); // Finding the AI Card
+        aiCard = findViewById(R.id.cardAiChat);
+        chatCard = findViewById(R.id.cardChat);
 
         // 2. Set Click Listener for Scanner
         scanCard.setOnClickListener(v -> startQRScanner());
 
-        // 3. Set Click Listener for AI Chat (Added)
-        // This makes the card clickable and opens the AI Chat screen
+        // 3. Set Click Listener for AI Chat
         if (aiCard != null) {
             aiCard.setOnClickListener(v -> {
                 startActivity(new Intent(MainActivity.this, AiChatActivity.class));
             });
         }
 
-        // 4. Set Click Listener for Profile Icon
+        // 4. Set Click Listener for Real-Time Chat (Study Group)
+        if (chatCard != null) {
+            chatCard.setOnClickListener(v -> {
+                startActivity(new Intent(MainActivity.this, StudyGroupChatActivity.class));
+            });
+        }
+
+        // 5. Set Click Listener for Profile Icon
         profileIcon.setOnClickListener(this::showPopupMenu);
     }
 
@@ -74,13 +87,11 @@ public class MainActivity extends AppCompatActivity {
                 // QR Code detected!
                 String scannedData = result.getContents();
                 Toast.makeText(this, "Scanned: " + scannedData, Toast.LENGTH_LONG).show();
-
-                // Optional: In the future, we can add logic here to do something
-                // specific if the QR code is a "Quiz Set ID".
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
-        }    }
+        }
+    }
 
     private void showPopupMenu(View view) {
         PopupMenu popupMenu = new PopupMenu(this, view);

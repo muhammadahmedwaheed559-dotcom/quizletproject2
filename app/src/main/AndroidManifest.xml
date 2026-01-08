@@ -35,6 +35,9 @@
             android:exported="false" />
 
         <activity android:name=".AiChatActivity" />
+        <activity android:name=".UserListActivity" />
+        <activity android:name=".ChatActivity" />
+        <activity android:name=".StudyGroupChatActivity" />
 
         <!-- QR Scanner Activity -->
         <activity
