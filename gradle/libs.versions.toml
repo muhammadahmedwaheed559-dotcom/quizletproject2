@@ -13,7 +13,7 @@ firebase-auth = "23.0.0"
 firebase-firestore = "25.0.0"
 firebase-ui-auth = "8.0.2"
 firebase-ui-firestore = "8.0.2"
-
+firebase-messaging = "24.0.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -29,7 +29,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth"}
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore"}
 firebase-ui-auth = { group = "com.firebaseui", name = "firebase-ui-auth", version.ref = "firebase-ui-auth" }
 firebase-ui-firestore = { group = "com.firebaseui", name = "firebase-ui-firestore", version.ref = "firebase-ui-firestore" }
-
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebase-messaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

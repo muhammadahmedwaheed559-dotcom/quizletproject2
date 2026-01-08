@@ -1,16 +1,22 @@
 package com.example.quizletproject2;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 
 // AdMob Imports
 import com.google.android.gms.ads.AdError;
@@ -22,53 +28,109 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 
-// Firebase & ZXing Imports
+// Firebase, Google Services & ZXing Imports
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private CardView scanCard, aiCard, chatCard, visionCard;
-    private ImageView profileIcon; // This is now the logout button
+    private ImageView profileIcon;
 
-    // AdMob Variables
     private AdView mAdView;
     private InterstitialAd mInterstitialAd;
+
+    // --- Declare the launcher at the top of your Activity/Fragment ---
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+        if (isGranted) {
+            // FCM SDK (and your app) can post notifications.
+            saveUserToFirestore(); // Get and save token now that we have permission
+        } else {
+            // Inform user that notifications are disabled
+            Toast.makeText(this, "Notifications will not be shown.", Toast.LENGTH_SHORT).show();
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. Initialize AdMob SDK
         MobileAds.initialize(this, initializationStatus -> {});
 
-        // 2. Load Banner Ad
         mAdView = findViewById(R.id.adView);
         if (mAdView != null) {
             AdRequest adRequest = new AdRequest.Builder().build();
             mAdView.loadAd(adRequest);
         }
 
-        // 3. Pre-load Interstitial Ad
         loadInterstitialAd();
 
-        // 4. Find Views by ID
         scanCard = findViewById(R.id.cardScanner);
         aiCard = findViewById(R.id.cardAiChat);
         chatCard = findViewById(R.id.cardChat);
         visionCard = findViewById(R.id.cardVision);
-        profileIcon = findViewById(R.id.ivProfile); // Repurposed for logout
+        profileIcon = findViewById(R.id.ivProfile);
 
-        // 5. Set Click Listeners
-        scanCard.setOnClickListener(v -> showInterstitialAndScan()); // Changed this line
+        scanCard.setOnClickListener(v -> showInterstitialAndScan());
         aiCard.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, AiChatActivity.class)));
         chatCard.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, StudyGroupChatActivity.class)));
         visionCard.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, ObjectDetectionActivity.class)));
-        
-        // Logout logic is now attached to the profile icon
         profileIcon.setOnClickListener(v -> showLogoutMenu(v));
+
+        // Ask for notification permission and then get FCM token
+        askNotificationPermission();
+    }
+
+    private void askNotificationPermission() {
+        // This is only necessary for API level 33 and higher.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                // FCM SDK (and your app) can post notifications.
+                 saveUserToFirestore(); // Already have permission, get token
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: Display an educational UI explaining why the permission is needed.
+                // For now, we'll just request the permission.
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+    }
+
+    private void saveUserToFirestore() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w("FCM", "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+                    String token = task.getResult();
+
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("uid", currentUser.getUid());
+                    userMap.put("email", currentUser.getEmail());
+                    userMap.put("fcmToken", token);
+
+                    db.collection("users").document(currentUser.getUid())
+                            .set(userMap)
+                            .addOnSuccessListener(aVoid -> Log.d("FCM", "User token saved."))
+                            .addOnFailureListener(e -> Log.w("FCM", "Error saving token", e));
+                });
     }
 
     private void loadInterstitialAd() {
@@ -82,15 +144,13 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onAdDismissedFullScreenContent() {
                                 mInterstitialAd = null;
-                                loadInterstitialAd(); // Pre-load the next one
-                                // Ad is dismissed, now start the scanner
+                                loadInterstitialAd();
                                 startQRScanner();
                             }
 
                             @Override
                             public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
                                 mInterstitialAd = null;
-                                // Ad failed to show, start scanner anyway
                                 startQRScanner();
                             }
                         });
@@ -107,8 +167,6 @@ public class MainActivity extends AppCompatActivity {
         if (mInterstitialAd != null) {
             mInterstitialAd.show(this);
         } else {
-            Log.d("TAG", "The interstitial ad wasn't ready yet.");
-            // Ad not ready, start scanner immediately
             startQRScanner();
         }
     }
