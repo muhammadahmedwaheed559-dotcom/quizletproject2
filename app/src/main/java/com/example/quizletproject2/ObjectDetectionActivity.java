@@ -34,9 +34,10 @@ public class ObjectDetectionActivity extends AppCompatActivity {
 
     private static final int PICK_IMAGE_REQUEST = 1;
     // IMPORTANT: PASTE YOUR HUGGING FACE TOKEN HERE
-    private static final String HF_API_TOKEN = "YOUR_HUGGING_FACE_API_TOKEN";
+    private static final String HF_API_TOKEN = "MY API KEY";
     // UPDATED to a more stable model
     private static final String HUGGING_FACE_API_URL = "https://router.huggingface.co/hf-inference/models/google/vit-base-patch16-224";
+
 
     private ImageView imageView;
     private TextView resultTextView;

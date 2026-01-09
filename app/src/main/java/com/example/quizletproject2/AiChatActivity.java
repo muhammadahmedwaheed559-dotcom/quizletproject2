@@ -1,11 +1,16 @@
 package com.example.quizletproject2;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,51 +33,91 @@ import okhttp3.Response;
 
 public class AiChatActivity extends AppCompatActivity {
 
-    RecyclerView recyclerView;
-    EditText messageEditText;
-    Button sendButton;
-    List<Message> messageList;
-    MessageAdapter messageAdapter;
+    private RecyclerView recyclerView;
+    private EditText messageEditText;
+    private Button sendButton;
+    private Spinner languageSpinner;
 
-    // YOUR API KEY
-    public static final String API_KEY = "YOUR_API_KEY";
+    private List<Message> messageList;
+    private MessageAdapter messageAdapter;
 
-    // Google Gemini API URL
+    // IMPORTANT: PASTE YOUR GEMINI API KEY HERE
+    private static final String API_KEY = "MY API KEY";
+
     private static final String URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
 
-    private OkHttpClient client;
+    private final OkHttpClient client = new OkHttpClient();
+
+    private SharedPreferences sharedPreferences;
+    private String selectedLanguage = "English"; // Default language
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ai_chat);
 
+        sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
+
         messageList = new ArrayList<>();
         recyclerView = findViewById(R.id.recyclerViewChat);
         messageEditText = findViewById(R.id.etMessageInput);
         sendButton = findViewById(R.id.btnSend);
+        languageSpinner = findViewById(R.id.languageSpinner);
 
-        // Setup RecyclerView
+        // --- Setup Language Spinner ---
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.languages_array, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        languageSpinner.setAdapter(adapter);
+        loadLanguagePreference(); // Load saved language
+
+        languageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedLanguage = parent.getItemAtPosition(position).toString();
+                saveLanguagePreference(selectedLanguage);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
+        // --- Setup RecyclerView ---
         messageAdapter = new MessageAdapter(messageList);
         recyclerView.setAdapter(messageAdapter);
         LinearLayoutManager llm = new LinearLayoutManager(this);
-        llm.setStackFromEnd(true); // Scroll to bottom
+        llm.setStackFromEnd(true);
         recyclerView.setLayoutManager(llm);
 
-        client = new OkHttpClient();
+        sendButton.setOnClickListener(v -> {
+            String question = messageEditText.getText().toString().trim();
+            if (question.isEmpty()) return;
 
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String question = messageEditText.getText().toString().trim();
-                if (question.isEmpty()) {
-                    return;
-                }
-                addToChat(question, Message.SENT_BY_ME);
-                messageEditText.setText("");
-                callGeminiAPI(question);
+            if (API_KEY.isEmpty()) {
+                Toast.makeText(this, "Please add your Gemini API key", Toast.LENGTH_LONG).show();
+                addToChat("API Key is missing.", Message.SENT_BY_BOT);
+                return;
             }
+
+            addToChat(question, Message.SENT_BY_ME);
+            messageEditText.setText("");
+            callGeminiAPI(question);
         });
+    }
+
+    private void loadLanguagePreference() {
+        String savedLanguage = sharedPreferences.getString("selected_language", "English");
+        selectedLanguage = savedLanguage;
+        for (int i = 0; i < languageSpinner.getCount(); i++) {
+            if (languageSpinner.getItemAtPosition(i).toString().equalsIgnoreCase(savedLanguage)) {
+                languageSpinner.setSelection(i);
+                break;
+            }
+        }
+    }
+
+    private void saveLanguagePreference(String language) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("selected_language", language);
+        editor.apply();
     }
 
     void addToChat(String message, String sentBy) {
@@ -84,61 +129,59 @@ public class AiChatActivity extends AppCompatActivity {
     }
 
     void callGeminiAPI(String question) {
+        addToChat("Thinking...", Message.SENT_BY_BOT);
+
+        // --- Build the prompt with language instruction ---
+        String prompt = String.format("You are a helpful study assistant. Answer this in %s: %s", selectedLanguage, question);
+
         JSONObject jsonBody = new JSONObject();
         try {
-            JSONObject part = new JSONObject();
-            part.put("text", "You are a helpful study assistant. Answer this: " + question);
-
-            JSONArray parts = new JSONArray();
-            parts.put(part);
-
-            JSONObject content = new JSONObject();
-            content.put("parts", parts);
-
             JSONArray contents = new JSONArray();
+            JSONObject content = new JSONObject();
+            JSONArray parts = new JSONArray();
+            JSONObject part = new JSONObject();
+            part.put("text", prompt);
+            parts.put(part);
+            content.put("parts", parts);
             contents.put(content);
-
             jsonBody.put("contents", contents);
-
         } catch (JSONException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         RequestBody body = RequestBody.create(jsonBody.toString(), MediaType.get("application/json; charset=utf-8"));
-        Request request = new Request.Builder()
-                .url(URL)
-                .post(body)
-                .build();
+        Request request = new Request.Builder().url(URL).post(body).build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                addToChat("Failed to connect: " + e.getMessage(), Message.SENT_BY_BOT);
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                addResponse("Failed to connect: " + e.getMessage());
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     try {
                         String responseBody = response.body().string();
                         JSONObject jsonResponse = new JSONObject(responseBody);
-
                         JSONArray candidates = jsonResponse.getJSONArray("candidates");
                         JSONObject firstCandidate = candidates.getJSONObject(0);
                         JSONObject content = firstCandidate.getJSONObject("content");
                         JSONArray parts = content.getJSONArray("parts");
                         String aiResponse = parts.getJSONObject(0).getString("text");
-
-                        addToChat(aiResponse, Message.SENT_BY_BOT);
-
+                        addResponse(aiResponse.trim());
                     } catch (JSONException e) {
-                        e.printStackTrace();
-                        addToChat("Error parsing AI response", Message.SENT_BY_BOT);
+                        addResponse("Error parsing AI response");
                     }
                 } else {
-                    addToChat("Server Error: " + response.code(), Message.SENT_BY_BOT);
+                    addResponse("Server Error: " + response.code());
                 }
             }
         });
+    }
+
+    void addResponse(String response) {
+        messageList.remove(messageList.size() - 1); // Remove "Thinking..."
+        addToChat(response, Message.SENT_BY_BOT);
     }
 }

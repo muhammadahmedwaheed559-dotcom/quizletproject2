@@ -7,11 +7,20 @@
     android:fitsSystemWindows="true"
     tools:context=".AiChatActivity">
 
+    <Spinner
+        android:id="@+id/languageSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewChat"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_layout"
+        android:layout_below="@id/languageSpinner"
+        android:layout_above="@id/bottom_layout"
         android:padding="16dp" />
 
     <RelativeLayout
